@@ -1,0 +1,8 @@
+# cat=basic/string; type=string; label=Encryption Secret Key (do not change afterwards!!!)
+encryption_secretKey = AB1CD2EF3GH4IJ5KL6MN7OP8QR9AX0UW
+
+# cat=basic/string; type=string; label=Encryption Protocol (do not change afterwards!!!)
+encryption_protocol = AES-128-CBC
+
+# cat=basic/string; type=string; label=Encryption Vector (do not change afterwards!!!)
+encryption_vector = 34857d973953e43a
