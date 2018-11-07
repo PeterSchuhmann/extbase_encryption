@@ -6,7 +6,7 @@ has been tested with TYPO3 8.7 only (sorry haven't had more time yet).
 
 1) install extension
 2) set encryption key in extension manager settings (please update key, dont use same as example key)
-3) add annotation @encrypted to your extbase class probperties
+3) add annotation @encrypted to your extbase class properties
 
 use and see the magic happen in the database :)
 
