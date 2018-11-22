@@ -29,3 +29,5 @@ $dispatcher->connect(
     'update'
 );
 
+
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord']['PS\ExtbaseEncryption\Hooks\DatabaseEditRow'] = array('depends' => array('TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseEditRow'));

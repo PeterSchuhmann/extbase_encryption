@@ -26,8 +26,6 @@ class ConvertData
 	 */
 	public function read(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query, array $data)
 	{
-
-
 		$properties = $this->reflectionService->getClassPropertyNames($query->getSource()->getNodeTypeName());
 		foreach($properties as $property) {
 			$tags = $this->reflectionService->getPropertyTagsValues($query->getSource()->getNodeTypeName(), $property);
