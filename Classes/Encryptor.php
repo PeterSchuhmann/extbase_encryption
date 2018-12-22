@@ -2,6 +2,9 @@
 
 namespace PS\ExtbaseEncryption;
 
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Class Encryptor
  * @package Resomedia\DoctrineEncryptBundle\Encryptors
@@ -24,6 +27,10 @@ class Encryptor
      */
     private $vector;
 
+    public static function init()
+    {
+        return new self(Config::get('encryption_secretKey'), Config::get('encryption_protocol'), Config::get('encryption_vector'));
+    }
 
     /**
      * Must accept secret key for encryption
@@ -41,6 +48,8 @@ class Encryptor
         	throw new \Exception('Error: no encryption config found. Please save settings in Extensionmanger');
 		}
     }
+
+
 
     public function isValueEncrypted($data)
 	{
@@ -91,6 +100,104 @@ class Encryptor
     		$value = $data;
 		}
         return $value;
+    }
+
+    public function encryptTable($table, $uid = 0)
+    {
+        if(!isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'][$table])) {
+            throw new \Exception('Error: table "' . $table . '" was not found in GLOBALS SC_OPTIONS (please see readme for that)"');
+        }
+
+        $class = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'][$table];
+
+
+        $this->reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
+        $properties = $this->reflectionService->getClassPropertyNames($class);
+
+        $encrypted = array();
+        if (is_array($properties)) {
+            foreach ($properties as $property) {
+                $tags = $this->reflectionService->getPropertyTagsValues($class, $property);
+                if (isSet($tags['encrypted'])) {
+                    $encrypted[] = $property;
+                }
+            }
+        }
+
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
+
+        $queryBuilder->select('*')->from($table);
+        if ($uid > 0) {
+            $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
+        }
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+            // Do something with that single row
+            foreach($encrypted as $property) {
+                $row[$property] = $this->encrypt($row[$property]);
+            }
+
+            $databaseConnection->update(
+                $table,
+                $row,
+                array('uid' => $row['uid'])
+            );
+
+        }
+
+        return true;
+    }
+
+
+    public function decryptTable($table, $uid = 0)
+    {
+        if(!isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'][$table])) {
+            throw new \Exception('Error: table "' . $table . '" was not found in GLOBALS SC_OPTIONS (please see readme for that)"');
+        }
+
+        $class = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'][$table];
+
+
+        $this->reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
+        $properties = $this->reflectionService->getClassPropertyNames($class);
+
+        $encrypted = array();
+        if (is_array($properties)) {
+            foreach ($properties as $property) {
+                $tags = $this->reflectionService->getPropertyTagsValues($class, $property);
+                if (isSet($tags['encrypted'])) {
+                    $encrypted[] = $property;
+                }
+            }
+        }
+
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
+
+        $queryBuilder->select('*')->from($table);
+        if ($uid > 0) {
+            $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
+        }
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+            // Do something with that single row
+            foreach($encrypted as $property) {
+                $row[$property] = $this->decrypt($row[$property]);
+            }
+
+            $databaseConnection->update(
+                $table,
+                $row,
+                array('uid' => $row['uid'])
+            );
+
+        }
+
+        return true;
+
     }
 
 }

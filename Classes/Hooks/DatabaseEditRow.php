@@ -10,6 +10,11 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormDataProviderInterface
 {
 
+    /**
+     * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
+     */
+    protected $reflectionService;
+
 	/**
 	 * Fetch existing record from database
 	 *
@@ -19,27 +24,44 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
 	 */
 	public function addData(array $result)
 	{
-		if (isSet($result['databaseRow']) && count($result['databaseRow']) > 0) {
+	    if (isSet($result['databaseRow']) && count($result['databaseRow']) > 0 && is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) && count($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) > 0) {
 
-			$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_encryption']);
-			$encryptor = new Encryptor($extConf['encryption_secretKey'], $extConf['encryption_protocol'], $extConf['encryption_vector']);
+	        foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'] as $table => $class) {
+	            if ($result['tableName'] == $table) {
 
-			try {
-				$result['recordTitle']= $encryptor->decrypt($result['recordTitle']);
-			} catch(\Exception $e) {
-				$result['recordTitle'] = $result['recordTitle'];
-			}
+                    $this->reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
+                    $properties = $this->reflectionService->getClassPropertyNames($class);
+                    if (!is_array($properties)) {
+                        continue;
+                    }
 
-			foreach($result['databaseRow'] as $key => $value) {
-				if (is_string($value)) {
-					try {
-						$result['databaseRow'][$key] = $encryptor->decrypt($value);
-					} catch(\Exception $e) {
-						$result['databaseRow'][$key] = $value;
-					}
-				}
-			}
-		}
+                    foreach($properties as $property) {
+                        $tags = $this->reflectionService->getPropertyTagsValues($class, $property);
+                        if (isSet($tags['encrypted'])) {
+
+                            if (!isSet($result['databaseRow'][$property])) {
+                                continue;
+                            }
+
+                            $encryptor = Encryptor::init();
+
+                            $value = $result['databaseRow'][$property];
+
+                            try {
+						        $result['databaseRow'][$property] = $encryptor->decrypt($value);
+					        } catch(\Exception $e) {
+						        $result['databaseRow'][$property] = $value;
+					        }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
 
 		return $result;
 	}

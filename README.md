@@ -4,9 +4,12 @@ has been tested with TYPO3 8.7 only (sorry haven't had more time yet).
 
 ## Install
 
-1) install extension
-2) set encryption key in extension manager settings (please update key, dont use same as example key)
-3) add annotation @encrypted to your extbase class properties
+1) Make a Backup - just in case ;)
+2) install extension
+3) set encryption key in extension manager settings (please update key, dont use same as example key)
+4) **Make sure you use TEXT instead of VARCHAR as datatype for your database fields** (encrypted strings  become way longer than the original data which will destroy your data if it can't be stored correctly)
+5) add annotation @encrypted to your extbase class properties (see examples)
+ 
 
 use and see the magic happen in the database :)
 
@@ -19,6 +22,37 @@ limitations: Works with string vars only
 Based on the symfony project: https://github.com/Resomedia/DoctrineEncryptBundle/blob/master/Encryptors/Encryptor.php
 
 
+## Backend/CLI integration
+
+to make decryption work in the typo3 backend and via cli please make sure you register all classes like this:
+
+```
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']['tx_test_domain_model_test'] = 'Test\\Test\\Domain\\Model\\Test'; 
+```
+**Importend**: classname without leading \\ ("Test\\Test\..." not "\\Test\\Test...")
+
+*If someone knows a better way to fetch the entity class by tablename please get in touch with me*
+
+**Commands:**
+
+decrypt all tables in database 
+```
+./typo3/cli_dispatch.phpsh extbase_encryption database:decrypt --all 
+```
+
+encrypt all tables in database 
+```
+./typo3/cli_dispatch.phpsh extbase_encryption database:encrypt --all 
+```
+
+decrypt single table "tx_test_domain_model_test" 
+```
+./typo3/cli_dispatch.phpsh extbase_encryption database:decrypt --table=tx_test_domain_model_test 
+```
+encrypt single table "tx_test_domain_model_test" 
+```
+./typo3/cli_dispatch.phpsh extbase_encryption database:encrypt --table=tx_test_domain_model_test 
+```
 
 ## Example:
 

@@ -34,10 +34,9 @@ class ConvertData
 				foreach($data as $index => $row) {
 					if (isSet($data[$index][$propertyName])) {
 
-						$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_encryption']);
-						$encryptor = new Encryptor($extConf['encryption_secretKey'], $extConf['encryption_protocol'], $extConf['encryption_vector']);
+                        $encryptor = Encryptor::init();
 
-						$data[$index][$propertyName] = $encryptor->decrypt($data[$index][$propertyName]);
+//						$data[$index][$propertyName] = $encryptor->decrypt($data[$index][$propertyName]);
 					}
 				}
 
@@ -72,8 +71,7 @@ class ConvertData
 			$tags = $this->reflectionService->getPropertyTagsValues($class, $property);
 			if (isSet($tags['encrypted'])) {
 
-				$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_encryption']);
-				$encryptor = new Encryptor($extConf['encryption_secretKey'], $extConf['encryption_protocol'], $extConf['encryption_vector']);
+                $encryptor = Encryptor::init();
 
 				$object->_setProperty($property, $encryptor->encrypt($object->_getProperty($property)));
 			}
@@ -97,8 +95,7 @@ class ConvertData
 			$tags = $this->reflectionService->getPropertyTagsValues($class, $property);
 			if (isSet($tags['encrypted'])) {
 
-				$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_encryption']);
-				$encryptor = new Encryptor($extConf['encryption_secretKey'], $extConf['encryption_protocol'], $extConf['encryption_vector']);
+				$encryptor = Encryptor::init();
 
 				$existingValue = $object->_getProperty($property);
 
