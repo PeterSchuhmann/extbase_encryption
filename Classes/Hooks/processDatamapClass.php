@@ -2,6 +2,7 @@
 namespace PS\ExtbaseEncryption\Hooks;
 
 use PS\ExtbaseEncryption\Encryptor;
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 
 class processDatamapClass {
 
@@ -13,7 +14,20 @@ class processDatamapClass {
             isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'][$table])
         ) {
             $encryptor = Encryptor::init();
-            $encryptor->encryptTable($table, $id);
+
+            $row = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, intval($id));
+
+            $row = $encryptor->encryptRow($row, $table);
+
+            $oldVersion = (VersionNumberUtility::convertVersionNumberToInteger(TYPO3_version) < 8007000);
+
+            if ($oldVersion) {
+                $GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid = ' . $id, $row);
+            }
+            else {
+                // needs implementation
+            }
+
         }
 
     }

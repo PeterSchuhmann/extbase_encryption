@@ -36,7 +36,7 @@ class ConvertData
 
                         $encryptor = Encryptor::init();
 
-//						$data[$index][$propertyName] = $encryptor->decrypt($data[$index][$propertyName]);
+						$data[$index][$propertyName] = $encryptor->decrypt($data[$index][$propertyName]);
 					}
 				}
 
