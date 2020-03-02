@@ -78,7 +78,7 @@ class Encryptor
 		if (!$this->isValueEncrypted($data)) {
 			$value = openssl_encrypt($data, $this->protocol, $this->secretKey, 0, $this->vector);
 		   if ($value === false) {
-			   throw new \Exception('Impossible to crypt data');
+			   throw new \Exception('Impossible to crypt data: ' . $data);
 		   }
 		   $value = '[ENC]' . $value;
 		}
@@ -208,7 +208,7 @@ class Encryptor
         if ($this->isValueEncrypted($data)) {
             $value = openssl_decrypt(str_replace('[ENC]', '',$data), $this->protocol, $this->secretKey, 0, $this->vector);
             if ($value === false) {
-                throw new \Exception('Impossible to decrypt data');
+                throw new \Exception('Impossible to decrypt data: ' . $data);
             }
         }
         else {

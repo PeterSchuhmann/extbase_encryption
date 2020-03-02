@@ -32,7 +32,9 @@ $dispatcher->connect(
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord']['PS\ExtbaseEncryption\Hooks\DatabaseEditRow'] = array('depends' => array('TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseEditRow'));
 
-$GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 'EXT:extbase_encryption/Classes/Hooks/processDatamapClass.php:PS\ExtbaseEncryption\Hooks\processDatamapClass';
+
+
+// $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 'EXT:extbase_encryption/Classes/Hooks/processDatamapClass.php:PS\ExtbaseEncryption\Hooks\processDatamapClass';
 
 // $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']['table'] = 'class';
 

@@ -15,19 +15,19 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
      */
     protected $reflectionService;
 
-	/**
-	 * Fetch existing record from database
-	 *
-	 * @param array $result
-	 * @return array
-	 * @throws \UnexpectedValueException
-	 */
-	public function addData(array $result)
-	{
-	    if (isSet($result['databaseRow']) && count($result['databaseRow']) > 0 && is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) && count($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) > 0) {
+    /**
+     * Fetch existing record from database
+     *
+     * @param array $result
+     * @return array
+     * @throws \UnexpectedValueException
+     */
+    public function addData(array $result)
+    {
+        if (isSet($result['databaseRow']) && count($result['databaseRow']) > 0 && is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) && count($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes']) > 0) {
 
-	        foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'] as $table => $class) {
-	            if ($result['tableName'] == $table) {
+            foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['classes'] as $table => $class) {
+                if ($result['tableName'] == $table) {
 
                     $this->reflectionService = new \TYPO3\CMS\Extbase\Reflection\ReflectionService();
                     $properties = $this->reflectionService->getClassPropertyNames($class);
@@ -48,10 +48,10 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
                             $value = $result['databaseRow'][$property];
 
                             try {
-						        $result['databaseRow'][$property] = $encryptor->decrypt($value);
-					        } catch(\Exception $e) {
-						        $result['databaseRow'][$property] = $value;
-					        }
+                                $result['databaseRow'][$property] = $encryptor->decrypt($value);
+                            } catch(\Exception $e) {
+                                $result['databaseRow'][$property] = $value;
+                            }
 
                         }
 
@@ -63,7 +63,7 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
 
         }
 
-		return $result;
-	}
+        return $result;
+    }
 
 }
