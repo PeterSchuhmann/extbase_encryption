@@ -1,0 +1,57 @@
+
+<style>
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial;
+        padding: 20px;
+    }
+
+    input[type="text"] {
+        padding: 5px;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .result-output {
+        margin-top: 30px;
+    }
+
+    .hidden {
+        /*text-indent: -600em;*/
+        /*visibility: hidden;*/
+    }
+
+    #result {
+
+    }
+
+</style>
+
+<script>
+    function copy2clipboard() {
+        var copyText = document.getElementById("result");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999)
+        document.execCommand("copy");
+        alert("Copied the text: " + copyText.value);
+    }
+</script>
+
+<h1>Extbase Encryption</h1>
+
+
+<p>decrypt or encrypt values manually</p>
+<f:form action="index">
+    <f:form.textfield name="value" value="{value}"/>
+    <f:form.submit name="submit" value="Convert"/>
+
+    <f:if condition="{encrypted}">
+        <div>
+            <label for="result"></label>
+            <f:form.textfield id="result" name="result" value="{encrypted}"/>
+            <button type="button" onclick="copy2clipboard()">Copy</button>
+        </div>
+    </f:if>
+
+
+
+</f:form>

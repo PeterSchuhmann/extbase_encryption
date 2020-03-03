@@ -116,6 +116,90 @@ class Encryptor
     }
 
 
+    public function encryptFeUserRow($row)
+    {
+        $table = 'fe_users';
+        $uid = $row['uid'];
+
+        if (!isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']) || !is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login'])) {
+            return $row;
+        }
+
+        if (isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable']) && $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable'] === true)
+        {
+            $properties = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['properties'] ?? [];
+            foreach($properties as $property) {
+                $row[$property] = $this->encrypt($row[$property]);
+            }
+
+            $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+            $databaseConnection = $connectionPool->getConnectionForTable($table);
+
+            $databaseConnection->update(
+                $table,
+                $row,
+                array('uid' => $row['uid'])
+            );
+
+        }
+        else {
+            return $row;
+        }
+
+
+    }
+
+    public function encryptFeUserTable()
+    {
+        $table = 'fe_users';
+
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
+
+        $queryBuilder->getRestrictions()->removeAll();
+
+        $queryBuilder->select('*')
+            ->from($table);
+//            ->setMaxResults(20);
+
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+            $this->encryptFeUserRow($row);
+
+        }
+    }
+
+    public function decryptFeUserTable()
+    {
+        $table = 'fe_users';
+
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
+
+        $queryBuilder->getRestrictions()->removeAll();
+
+        $queryBuilder->select('*')->from($table);
+
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+
+            try {
+                $row = $this->decryptFeUserRow($row);
+
+                $databaseConnection->update(
+                    $table,
+                    $row,
+                    array('uid' => $row['uid'])
+                );
+            } catch(\Exception $e) {
+                echo 'failed to decrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage() . chr(10);
+            }
+
+        }
+    }
+
 
     public function encryptTable($table, $uid = 0)
     {
@@ -179,8 +263,12 @@ class Encryptor
             $statement = $queryBuilder->execute();
             while ($row = $statement->fetch()) {
                 // Do something with that single row
+                try {
                 foreach($encrypted as $property) {
                     $row[$property] = $this->encrypt($row[$property]);
+                }
+                } catch(\Exception $e) {
+                    echo 'failed to encrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage();
                 }
 
                 $databaseConnection->update(
@@ -265,6 +353,29 @@ class Encryptor
         return $row;
     }
 
+    public function decryptFeUserRow($row)
+    {
+        $table = 'fe_users';
+        $uid = $row['uid'];
+
+        if (!isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']) || !is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login'])) {
+            return $row;
+        }
+
+        if (isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable']) && $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable'] === true) {
+            $properties = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['properties'] ?? [];
+
+            foreach ($properties as $property) {
+                if (isSet($row[$property])) {
+                    $row[$property] = $this->decrypt($row[$property]);
+                }
+            }
+
+        }
+
+        return $row;
+    }
+
 
     public function decryptTable($table, $uid = 0)
     {
@@ -329,15 +440,19 @@ class Encryptor
             $statement = $queryBuilder->execute();
             while ($row = $statement->fetch()) {
                 // Do something with that single row
-                foreach($encrypted as $property) {
-                    $row[$property] = $this->decrypt($row[$property]);
-                }
+                try {
+                    foreach($encrypted as $property) {
+                        $row[$property] = $this->decrypt($row[$property]);
+                    }
 
-                $databaseConnection->update(
-                    $table,
-                    $row,
-                    array('uid' => $row['uid'])
-                );
+                    $databaseConnection->update(
+                        $table,
+                        $row,
+                        array('uid' => $row['uid'])
+                    );
+                } catch(\Exception $e) {
+                    echo 'failed to decrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage();
+                }
 
             }
         }
