@@ -29,6 +29,11 @@ $dispatcher->connect(
     'update'
 );
 
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord'][\PS\ExtbaseEncryption\Backend\FormDataProvider\EditRow::class] = [
+    'depends' => [
+        \TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseEditRow::class,
+    ]
+];
 
 //\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class)->connect(
 //    \TYPO3\CMS\Core\Resource\Index\MetaDataRepository::class,
