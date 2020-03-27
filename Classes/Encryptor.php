@@ -167,7 +167,26 @@ class Encryptor
 
         $statement = $queryBuilder->execute();
         while ($row = $statement->fetch()) {
-            $this->encryptFeUserRow($row);
+
+            $skip = false;
+
+            foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_encryption']['skipEncryptRecord'] ?? [] as $reference) {
+
+                $params = [
+                    'skip' => $skip,
+                    'row' => $row,
+                    'table' => $table
+                ];
+
+                if ($reference) {
+                    $skip = GeneralUtility::callUserFunction($reference, $params, $this);
+                }
+            }
+
+
+            if (!$skip) {
+                $this->encryptFeUserRow($row);
+            }
 
         }
     }
@@ -187,16 +206,34 @@ class Encryptor
         $statement = $queryBuilder->execute();
         while ($row = $statement->fetch()) {
 
-            try {
-                $row = $this->decryptFeUserRow($row);
+            $skip = false;
 
-                $databaseConnection->update(
-                    $table,
-                    $row,
-                    array('uid' => $row['uid'])
-                );
-            } catch(\Exception $e) {
-                echo 'failed to decrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage() . chr(10);
+            foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_encryption']['skipDecryptRecord'] ?? [] as $reference) {
+
+                $params = [
+                    'skip' => $skip,
+                    'row' => $row,
+                    'table' => $table
+                ];
+
+                if ($reference) {
+                    $skip = GeneralUtility::callUserFunction($reference, $params, $this);
+                }
+            }
+
+            if (!$skip) {
+
+                try {
+                    $row = $this->decryptFeUserRow($row);
+
+                    $databaseConnection->update(
+                        $table,
+                        $row,
+                        array('uid' => $row['uid'])
+                    );
+                } catch (\Exception $e) {
+                    echo 'failed to decrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage() . chr(10);
+                }
             }
 
         }
@@ -229,47 +266,41 @@ class Encryptor
             }
         }
 
-        if ($this->oldVersion) {
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
 
-            $offset = 0;
-            do {
-                $affectedRows = 0;
+        $queryBuilder->select('*')->from($table);
+        if ($uid > 0) {
+            $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
+        }
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+            // Do something with that single row
 
-                $res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $table, $addWhere, '', 'uid asc', $offset. ',100');
-                while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+            $skip = false;
 
-                    var_dump($row['uid']);
+            foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_encryption']['skipEncryptRecord'] ?? [] as $reference) {
 
-                    foreach($encrypted as $property) {
+                $params = [
+                    'skip' => $skip,
+                    'row' => $row,
+                    'table' => $table
+                ];
+
+                if ($reference) {
+                    $skip = GeneralUtility::callUserFunction($reference, $params, $this);
+                }
+            }
+
+
+            if (!$skip) {
+
+                try {
+                    foreach ($encrypted as $property) {
                         $row[$property] = $this->encrypt($row[$property]);
                     }
-
-                    $GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid = ' . $row['uid'], $row);
-                    $row = null;
-
-                    $affectedRows++;
-                }
-
-                $offset += $affectedRows;
-            } while ($affectedRows >= 100);
-        }
-        else {
-            $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
-            $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
-            $databaseConnection = $connectionPool->getConnectionForTable($table);
-
-            $queryBuilder->select('*')->from($table);
-            if ($uid > 0) {
-                $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
-            }
-            $statement = $queryBuilder->execute();
-            while ($row = $statement->fetch()) {
-                // Do something with that single row
-                try {
-                foreach($encrypted as $property) {
-                    $row[$property] = $this->encrypt($row[$property]);
-                }
-                } catch(\Exception $e) {
+                } catch (\Exception $e) {
                     echo 'failed to encrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage();
                 }
 
@@ -278,8 +309,8 @@ class Encryptor
                     $row,
                     array('uid' => $row['uid'])
                 );
-
             }
+
         }
 
         return true;
@@ -369,7 +400,11 @@ class Encryptor
 
             foreach ($properties as $property) {
                 if (isSet($row[$property])) {
-                    $row[$property] = $this->decrypt($row[$property]);
+                    try {
+                        $row[$property] = $this->decrypt($row[$property]);
+                    } catch (\Exception $e) {
+                        throw new \Exception('failed to decrypt value "' . $row[$property] . '" for property "' . $property . '"');
+                    }
                 }
             }
 
@@ -405,43 +440,36 @@ class Encryptor
             }
         }
 
-        if ($this->oldVersion) {
 
-            $offset = 0;
-            do {
-                $affectedRows = 0;
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $databaseConnection = $connectionPool->getConnectionForTable($table);
 
-                $res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', $table, $addWhere, '', 'uid asc', $offset. ',100');
-                while($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-
-                    var_dump($row['uid']);
-
-                    foreach($encrypted as $property) {
-                        $row[$property] = $this->decrypt($row[$property]);
-                    }
-
-                    $GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, 'uid = ' . $row['uid'], $row);
-                    $row = null;
-
-                    $affectedRows++;
-                }
-
-                $offset += $affectedRows;
-            } while ($affectedRows >= 100);
-
+        $queryBuilder->select('*')->from($table);
+        if ($uid > 0) {
+            $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
         }
-        else {
-            $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
-            $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
-            $databaseConnection = $connectionPool->getConnectionForTable($table);
+        $statement = $queryBuilder->execute();
+        while ($row = $statement->fetch()) {
+            // Do something with that single row
 
-            $queryBuilder->select('*')->from($table);
-            if ($uid > 0) {
-                $queryBuilder->where($queryBuilder->expr()->eq('uid', $uid));
+            $skip = false;
+
+            foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_encryption']['skipDecryptRecord'] ?? [] as $reference) {
+
+                $params = [
+                    'skip' => $skip,
+                    'row' => $row,
+                    'table' => $table
+                ];
+
+                if ($reference) {
+                    $skip = GeneralUtility::callUserFunction($reference, $params, $this);
+                }
             }
-            $statement = $queryBuilder->execute();
-            while ($row = $statement->fetch()) {
-                // Do something with that single row
+
+            if (!$skip) {
+
                 try {
                     foreach($encrypted as $property) {
                         $row[$property] = $this->decrypt($row[$property]);
@@ -455,12 +483,11 @@ class Encryptor
                 } catch(\Exception $e) {
                     echo 'failed to decrypt row ' . $row['uid'] . ' with error: ' . $e->getMessage();
                 }
-
             }
+
         }
 
         return true;
-
     }
 
 }
