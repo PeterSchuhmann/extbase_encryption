@@ -9,7 +9,7 @@ class CustomLabel {
     public function decryptLabel(&$parameters)
     {
         $encryptor = Encryptor::init();
-        $parameters['title'] = $encryptor->decrypt($parameters['row']['username']);
+        $parameters['title'] = $encryptor->decrypt($parameters['row']['username']) . ($encryptor->isValueEncrypted($parameters['row']['username']) ? ' [ENC]' : '');
     }
 
 }

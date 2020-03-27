@@ -56,6 +56,13 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php'][
 
 
 /**
+ * backend search hook to search for encrypted values
+ */
+
+//$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS'][\TYPO3\CMS\Backend\View\PageLayoutView::class]['modifyQuery'][] = 'PS\\ExtbaseEncryption\\Hooks\\BackendSearchHook';
+//$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS'][\TYPO3\CMS\Recordlist\RecordList\DatabaseRecordList::class]['modifyQuery'][] = 'PS\\ExtbaseEncryption\\Hooks\\BackendSearchHook';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS'][\TYPO3\CMS\Recordlist\RecordList\DatabaseRecordList::class]['makeSearchStringConstraints'][] = 'PS\\ExtbaseEncryption\\Hooks\\BackendSearchHook';
+/**
  * authentication hooks
  */
 
