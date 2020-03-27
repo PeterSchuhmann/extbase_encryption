@@ -141,6 +141,8 @@ class Encryptor
                 array('uid' => $row['uid'])
             );
 
+            return $row;
+
         }
         else {
             return $row;
