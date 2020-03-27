@@ -127,9 +127,10 @@ class Encryptor
 
         if (isSet($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable']) && $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['enable'] === true)
         {
+            $updateRow = [];
             $properties = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['properties'] ?? [];
             foreach($properties as $property) {
-                $row[$property] = $this->encrypt($row[$property]);
+                $updateRow[$property] = $this->encrypt($row[$property]);
             }
 
             $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
@@ -137,7 +138,7 @@ class Encryptor
 
             $databaseConnection->update(
                 $table,
-                $row,
+                $updateRow,
                 array('uid' => $row['uid'])
             );
 
