@@ -71,19 +71,9 @@ class DatabaseEditRow extends AbstractDatabaseRecordProvider implements FormData
 
                 $encryptor = Encryptor::init();
 
-                foreach ($properties as $property) {
-                    if (isSet($result['databaseRow'][$property])) {
-                        $value = $result['databaseRow'][$property];
-                        try {
-                            $result['databaseRow'][$property] = $encryptor->decrypt($value);
-                        } catch(\Exception $e) {
-                            $result['databaseRow'][$property] = $value;
-                        }
-                    }
-                }
+                $encryptor->encryptFeUserRow($result['databaseRow']);
 
             }
-
 
         }
 
