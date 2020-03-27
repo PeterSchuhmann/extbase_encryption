@@ -58,6 +58,15 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['pos
 
 
 /**
+ * felogin extend controller to make pw reset possible
+ */
+
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][TYPO3\CMS\Felogin\Controller\FrontendLoginController::class] = [
+    'className' => PS\ExtbaseEncryption\Controller\FrontendLoginController::class
+];
+
+
+/**
  * CommandController
  */
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = \PS\ExtbaseEncryption\Command\DatabaseCommandController::class;
