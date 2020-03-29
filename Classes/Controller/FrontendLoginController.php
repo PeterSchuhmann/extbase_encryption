@@ -34,6 +34,8 @@ class FrontendLoginController extends \TYPO3\CMS\Felogin\Controller\FrontendLogi
 
                 $encryptor = Encryptor::init();
 
+                $email = strtolower($this->piVars['forgot_email']);
+
                 $row = $queryBuilder
                     ->select('*')
                     ->from($userTable)
@@ -42,21 +44,21 @@ class FrontendLoginController extends \TYPO3\CMS\Felogin\Controller\FrontendLogi
                             $queryBuilder->expr()->orX(
                                 $queryBuilder->expr()->eq(
                                     'email',
-                                    $queryBuilder->createNamedParameter($this->piVars['forgot_email'], \PDO::PARAM_STR)
+                                    $queryBuilder->createNamedParameter($email, \PDO::PARAM_STR)
                                 ),
                                 $queryBuilder->expr()->eq(
                                     'email',
-                                    $queryBuilder->createNamedParameter($encryptor->encrypt($this->piVars['forgot_email']), \PDO::PARAM_STR)
+                                    $queryBuilder->createNamedParameter($encryptor->encrypt($email), \PDO::PARAM_STR)
                                 )
                             ),
                             $queryBuilder->expr()->orX(
                                 $queryBuilder->expr()->eq(
                                     'username',
-                                    $queryBuilder->createNamedParameter($this->piVars['forgot_email'], \PDO::PARAM_STR)
+                                    $queryBuilder->createNamedParameter($email, \PDO::PARAM_STR)
                                 ),
                                 $queryBuilder->expr()->eq(
                                     'username',
-                                    $queryBuilder->createNamedParameter($encryptor->encrypt($this->piVars['forgot_email']), \PDO::PARAM_STR)
+                                    $queryBuilder->createNamedParameter($encryptor->encrypt($email), \PDO::PARAM_STR)
                                 )
                             )
                         ),
