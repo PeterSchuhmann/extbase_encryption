@@ -129,8 +129,18 @@ class Encryptor
         {
             $updateRow = [];
             $properties = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase_encryption']['fe_login']['properties'] ?? [];
-            foreach($properties as $property) {
-                $updateRow[$property] = $this->encrypt($row[$property]);
+
+            try {
+                foreach($properties as $property) {
+
+                    if ($property == 'username' || $property == 'email') {
+                        $row[$property] = strtolower($row[$property]);
+                    }
+
+                    $updateRow[$property] = $this->encrypt($row[$property]);
+                }
+            } catch(\Exception $e) {
+                echo 'failed to encrypt property "' . $property . '" of record fe_users ' .$row['uid'] . ' (' . $e->getMessage() . ')' .chr(10);
             }
 
             $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
