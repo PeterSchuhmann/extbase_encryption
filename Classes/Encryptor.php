@@ -133,7 +133,7 @@ class Encryptor
             try {
                 foreach($properties as $property) {
 
-                    if ($property == 'username' || $property == 'email') {
+                    if (($property == 'username' || $property == 'email') && !$this->isValueEncrypted($row[$property])) {
                         $row[$property] = strtolower($row[$property]);
                     }
 
